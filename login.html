@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login simplu</title>
+  <script>
+    function login() {
+      var parola = document.getElementById("parola").value;
+      if (parola === "1234") {
+        window.location.href = "index.html"; // pagina principală
+      } else {
+        alert("Parolă greșită!");
+      }
+    }
+  </script>
+</head>
+<body>
+  <h2>Introdu parola pentru a intra</h2>
+  <input type="password" id="parola" placeholder="Parola">
+  <button onclick="login()">Login</button>
+</body>
+</html>
