@@ -1,4 +1,85 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login simplu</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .login-box {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      width: 300px;
+      text-align: center;
+    }
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      background: #4facfe;
+      color: white;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0077ff;
+    }
+    #message {
+      margin-top: 10px;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>🔑 Login</h2>
+    <input type="text" id="username" placeholder="Utilizator">
+    <input type="password" id="password" placeholder="Parolă">
+    <button onclick="login()">Intră</button>
+    <p id="message"></p>
+  </div>
 
+  <script>
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      const msg = document.getElementById("message");
+
+      // 🔑 aici setezi user + parolă
+      const validUser = "admin";
+      const validPass = "parola123";
+
+      if(user === validUser && pass === validPass) {
+        msg.style.color = "green";
+        msg.textContent = "✅ Login reușit!";
+        // Redirect după login
+        setTimeout(() => {
+          window.location.href = "pagina-secreta.html";
+        }, 1000);
+      } else {
+        msg.style.color = "red";
+        msg.textContent = "❌ Utilizator sau parolă greșită!";
+      }
+    }
+  </script>
+</body>
+</html>
 
 <!DOCTYPE html>
 <html lang="ro">
