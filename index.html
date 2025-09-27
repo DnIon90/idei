@@ -1,3 +1,102 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Radio Manele</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#0f1724;color:#e6eef8;margin:0;padding:2rem}
+    .player{max-width:720px;margin:0 auto;background:linear-gradient(180deg,#111827 0%, #0b1220 100%);padding:1.2rem;border-radius:12px;box-shadow:0 8px 24px rgba(2,6,23,.6)}
+    h1{margin:0 0 .4rem;font-size:1.4rem}
+    p{margin:.2rem 0 1rem;color:#9fb0cc}
+    .stations{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem}
+    .station{background:#0b1320;border:1px solid rgba(255,255,255,0.03);padding:.6rem;border-radius:8px;cursor:pointer;transition:transform .12s,box-shadow .12s}
+    .station:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(0,0,0,.5)}
+    .station.active{outline:2px solid #2dd4bf}
+    .station img{width:100%;height:80px;object-fit:cover;border-radius:6px;margin-bottom:.4rem}
+    .station .title{font-weight:700}
+    .controls{display:flex;align-items:center;gap:.8rem}
+    .btn{background:#2dd4bf;color:#042027;padding:.5rem .9rem;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+    audio{width:100%;margin-top:1rem}
+    .meta{margin-left:auto;color:#9fb0cc;font-size:.9rem}
+  </style>
+</head>
+<body>
+  <div class="player">
+    <h1>Radio Manele — Player</h1>
+    <p>Selectează o stație din listă. Înlocuiește <code>STREAM_URL_HERE</code> cu linkul direct al fluxului audio (MP3 / AAC / .m3u8).</p>
+
+    <div class="stations" id="stations">
+      <!-- Exemplu: înlocuiește cu datele reale -->
+      <div class="station" data-src="STREAM_URL_HERE_1" data-title="Radio Manele 1">
+        <img src="https://via.placeholder.com/400x80?text=Manele+1" alt="Manele 1">
+        <div class="title">Radio Manele 1</div>
+        <div class="desc">Flux MP3 public / oficial</div>
+      </div>
+
+      <div class="station" data-src="STREAM_URL_HERE_2" data-title="Radio Manele 2">
+        <img src="https://via.placeholder.com/400x80?text=Manele+2" alt="Manele 2">
+        <div class="title">Radio Manele 2</div>
+        <div class="desc">Flux MP3 public / oficial</div>
+      </div>
+
+      <!-- Poți adăuga mai multe .station aici -->
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="playBtn">Play</button>
+      <button class="btn" id="pauseBtn">Pause</button>
+      <div class="meta" id="currentTitle">Nicio stație selectată</div>
+    </div>
+
+    <audio id="audio" preload="none"></audio>
+  </div>
+
+  <script>
+    const stationsEl = document.getElementById('stations');
+    const audio = document.getElementById('audio');
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const currentTitle = document.getElementById('currentTitle');
+
+    // Când apeși pe o stație, setează sursa și pornește
+    stationsEl.addEventListener('click', (e) => {
+      let el = e.target;
+      // urcă pînă la .station
+      while (el && !el.classList.contains('station')) el = el.parentElement;
+      if(!el) return;
+      const src = el.dataset.src;
+      const title = el.dataset.title || 'Post radio';
+      if(!src || src.indexOf('STREAM_URL_HERE') !== -1) {
+        alert('Înlocuiește STREAM_URL_HERE_* cu linkul real al fluxului.');
+        return;
+      }
+      // active class
+      document.querySelectorAll('.station').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+
+      audio.src = src;
+      audio.play().catch(err => {
+        console.warn('Autoplay blocat — apasă play manual.', err);
+      });
+      currentTitle.textContent = title;
+    });
+
+    playBtn.addEventListener('click', () => {
+      if (!audio.src) return alert('Selectează mai întâi o stație.');
+      audio.play();
+    });
+
+    pauseBtn.addEventListener('click', () => audio.pause());
+
+    // opțional: afisează eroare la load
+    audio.addEventListener('error', (e) => {
+      alert('Nu s-a putut încărca fluxul. Verifică URL-ul sau CORS.'); 
+      console.error(e);
+    });
+  </script>
+</body>
+</html>
 <h2>🎵 Ascultă Kiss FM live</h2>
 <audio controls autoplay>
   <source src="https://live.kissfm.ro/kissfm.mp3" type="audio/mpeg">
