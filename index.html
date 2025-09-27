@@ -1,34 +1,360 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Site cu poză</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: linear-gradient(135deg, #f8ffae, #43c6ac);
-      padding: 20px;
-    }
-    img {
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-      margin-top: 20px;
-    }
-    p {
-      font-size: 18px;
-      margin-top: 10px;
-      color: #222;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Site multicolor • GitHub Pages</title>
+<meta name="description" content="Exemplu de site multicolor pentru GitHub Pages" />
+
+<!-- FONTS: you can change or remove -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<style>
+  /* ===========================
+     Configurare variabile culori
+     =========================== */
+  :root{
+    --bg-dark: #0b0f1a;
+    --card-bg: rgba(255,255,255,0.03);
+    --glass: rgba(255,255,255,0.04);
+    --text: #e6eef8;
+    --muted: #a8b3c9;
+    --accent-speed: 12000ms; /* viteza animației generale */
+    --accent-size: 240%; /* mărimea gradientului animat */
+    --radius: 14px;
+  }
+
+  /* ===========================
+     Reset minimal + font
+     =========================== */
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: radial-gradient(1200px 600px at 10% 20%, rgba(255,100,120,0.08), transparent 8%),
+                radial-gradient(1000px 500px at 85% 80%, rgba(80,220,240,0.06), transparent 6%),
+                var(--bg-dark);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px;
+    min-height:100vh;
+  }
+
+  /* ===========================
+     Container central
+     =========================== */
+  .card{
+    width:100%;
+    max-width:980px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:var(--radius);
+    padding:36px;
+    box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+    position:relative;
+    overflow:hidden;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  /* ===========================
+     Fundal colorat animat (gradient în mișcare)
+     =========================== */
+  .color-wave{
+    position:absolute;
+    inset: -30% -50% -30% -50%;
+    background: conic-gradient(from 90deg at 50% 50%,
+      #ff6b6b, #ffd86b, #6bffb3, #6bd2ff, #b36bff, #ff6bb3, #ff6b6b);
+    filter: blur(72px) saturate(120%);
+    transform: scale(1.1);
+    opacity:0.18;
+    z-index:0;
+    animation: spin-accent var(--accent-speed) linear infinite;
+    will-change: transform, opacity;
+  }
+
+  @keyframes spin-accent{
+    0%{ transform: rotate(0deg) translateZ(0) scale(1.1); }
+    50%{ transform: rotate(180deg) translateZ(0) scale(1.05); }
+    100%{ transform: rotate(360deg) translateZ(0) scale(1.1); }
+  }
+
+  /* ===========================
+     Conținutul (sus punem text și butoane)
+     =========================== */
+  .content{
+    position:relative;
+    z-index:2;
+    display:grid;
+    gap:18px;
+  }
+
+  h1{
+    margin:0;
+    font-size:clamp(1.6rem, 2.8vw, 2.4rem);
+    line-height:1.02;
+    letter-spacing:-0.02em;
+  }
+
+  p.lead{
+    margin:0;
+    color:var(--muted);
+    font-size:1rem;
+  }
+
+  /* ===========================
+     Text multicolor (efect gradient animat pe text)
+     =========================== */
+  .rainbow-text{
+    display:inline-block;
+    font-weight:800;
+    background: linear-gradient(90deg, #ff6b6b, #ffd86b, #6bffb3, #6bd2ff, #b36bff);
+    background-size: var(--accent-size) 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: slide-gradient calc(var(--accent-speed) / 2) linear infinite;
+    font-weight:800;
+    font-size:clamp(1.8rem, 4.8vw, 3.2rem);
+  }
+
+  @keyframes slide-gradient{
+    0%{ background-position: 0% 50%; }
+    100%{ background-position: 100% 50%; }
+  }
+
+  /* ===========================
+     Butoane stilizate cu glow colorat
+     =========================== */
+  .controls{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:8px;
+  }
+
+  .btn{
+    appearance:none;
+    border:0;
+    padding:10px 16px;
+    border-radius:10px;
+    font-weight:600;
+    cursor:pointer;
+    background:linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    color:var(--text);
+    box-shadow: 0 6px 18px rgba(2,6,23,0.6), 0 0 18px rgba(0,0,0,0.15) inset;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+
+  .btn:active{ transform:translateY(1px) scale(0.998); }
+
+  .btn.primary{
+    background:linear-gradient(90deg, rgba(255,107,107,0.12), rgba(179,107,255,0.12));
+    box-shadow: 0 10px 30px rgba(179,107,255,0.06), 0 0 30px rgba(255,107,107,0.04);
+    border:1px solid rgba(255,255,255,0.04);
+  }
+
+  .btn.ghost{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.06);
+  }
+
+  /* ===========================
+     Card pentru demo conținut (grid)
+     =========================== */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+    gap:14px;
+    margin-top:18px;
+  }
+
+  .tile{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    border-radius:12px;
+    padding:14px;
+    min-height:96px;
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    border: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .swatch{
+    width:44px;
+    height:44px;
+    border-radius:10px;
+    flex:0 0 44px;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+  }
+
+  .tile .meta{flex:1}
+  .meta h4{margin:0 0 6px 0;font-size:0.98rem}
+  .meta p{margin:0;color:var(--muted);font-size:0.92rem}
+
+  /* ===========================
+     Footer mic
+     =========================== */
+  .foot{
+    margin-top:18px;
+    color:var(--muted);
+    font-size:0.88rem;
+  }
+
+  /* ===========================
+     Reduced motion accessibility
+     =========================== */
+  @media (prefers-reduced-motion: reduce){
+    .color-wave, .rainbow-text, .btn, .tile { animation: none; transition: none; }
+  }
+
+  /* Responsive adjustments */
+  @media (max-width:560px){
+    .card{ padding:20px }
+  }
+</style>
 </head>
 <body>
-  <h1>Bine ai venit pe site-ul meu 🎉</h1>
+  <div class="card" role="main" aria-labelledby="title">
+    <div class="color-wave" aria-hidden="true"></div>
 
-  <!-- 🔹 aici pui poza -->
-  <img src="images/poza1.jpg" alt="O poză frumoasă" width="400">
+    <div class="content">
+      <div>
+        <h1 id="title"><span class="rainbow-text">Site multicolor</span> — demo pentru GitHub Pages</h1>
+        <p class="lead">Un layout simplu cu gradient animat, butoane și plachete colorate. Personalizează culorile sau viteza în <code>:root</code>.</p>
+      </div>
 
-  <p>Aceasta este poza pe care am adăugat-o pe site.</p>
+      <div class="controls" id="controls">
+        <button class="btn primary" id="toggleRainbow">Oprire/Porni text</button>
+        <button class="btn ghost" id="faster">Mai repede</button>
+        <button class="btn ghost" id="slower">Mai încet</button>
+        <button class="btn ghost" id="randomize">Randomizează paleta</button>
+      </div>
+
+      <div class="grid" id="swatches">
+        <!-- Tile-urile vor fi populate din JS -->
+      </div>
+
+      <div class="foot">
+        <span>Made with ♥ • Pune acest fișier ca <code>index.html</code> în repo-ul tău și activează GitHub Pages.</span>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ===========================
+   JavaScript: controlează animația și culorile
+   =========================== */
+
+(() => {
+  const rainbowText = document.querySelector('.rainbow-text');
+  const toggleBtn = document.getElementById('toggleRainbow');
+  const fasterBtn = document.getElementById('faster');
+  const slowerBtn = document.getElementById('slower');
+  const randomBtn = document.getElementById('randomize');
+  const swatches = document.getElementById('swatches');
+  const root = document.documentElement;
+
+  let running = true;
+  // viteza actuală (ms) - ținem în variabilă JS și sincronizăm cu CSS
+  let speed = parseInt(getComputedStyle(root).getPropertyValue('--accent-speed')) || 12000;
+
+  // palete predefinite pentru randomizare
+  const palettes = [
+    ['#ff6b6b','#ffd86b','#6bffb3','#6bd2ff','#b36bff'],
+    ['#ff9a9e','#fad0c4','#fbc2eb','#a6c1ee','#cfd9df'],
+    ['#00c6ff','#0072ff','#00ffd5','#00b3ff','#7bffcb'],
+    ['#ff7eb3','#ff9a8b','#ffd36e','#f6f7d7','#b3fff2']
+  ];
+
+  // creează tile-urile de demo
+  function buildTiles(palette = palettes[0]) {
+    swatches.innerHTML = '';
+    palette.forEach((c, i) => {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      const sw = document.createElement('div');
+      sw.className = 'swatch';
+      sw.style.background = c;
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.innerHTML = `<h4>Paletă ${i+1}</h4><p>Hex: <strong>${c.toUpperCase()}</strong></p>`;
+      tile.appendChild(sw);
+      tile.appendChild(meta);
+      swatches.appendChild(tile);
+    });
+  }
+
+  // aplică paleta pe gradientul textului și pe .color-wave (folosim un gradient conic construit din culori)
+  function applyPalette(palette){
+    // text gradient
+    const textGrad = 'linear-gradient(90deg,' + palette.join(',') + ')';
+    rainbowText.style.background = textGrad;
+    // fundal conic
+    const cone = 'conic-gradient(from 90deg at 50% 50%,' + palette.join(',') + ')';
+    document.querySelector('.color-wave').style.background = cone;
+    buildTiles(palette);
+  }
+
+  // ajustare viteză
+  function setSpeed(ms){
+    speed = Math.max(1500, Math.min(60000, ms)); // limite
+    root.style.setProperty('--accent-speed', speed + 'ms');
+    // dacă vrei, sincronizezi și animația textului (care folosește calc(var(--accent-speed)/2))
+  }
+
+  // event handlers
+  toggleBtn.addEventListener('click', () => {
+    running = !running;
+    if(running){
+      rainbowText.style.animationPlayState = 'running';
+      document.querySelector('.color-wave').style.animationPlayState = 'running';
+      toggleBtn.textContent = 'Oprire/Porni text';
+    } else {
+      rainbowText.style.animationPlayState = 'paused';
+      document.querySelector('.color-wave').style.animationPlayState = 'paused';
+      toggleBtn.textContent = 'Oprire/Porni text';
+    }
+  });
+
+  fasterBtn.addEventListener('click', () => setSpeed(Math.round(speed * 0.7)));
+  slowerBtn.addEventListener('click', () => setSpeed(Math.round(speed * 1.4)));
+
+  randomBtn.addEventListener('click', () => {
+    const p = palettes[Math.floor(Math.random() * palettes.length)];
+    applyPalette(p);
+  });
+
+  // inițializare
+  applyPalette(palettes[0]);
+  setSpeed(speed);
+
+  // preferință pentru reduce-motion: dacă utilizatorul are reduce-motion activ, oprim animațiile
+  const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if(media && media.matches){
+    rainbowText.style.animation = 'none';
+    document.querySelector('.color-wave').style.animation = 'none';
+  }
+
+  // event: click pe swatch copiază hex
+  swatches.addEventListener('click', (ev) => {
+    const tile = ev.target.closest('.tile');
+    if(!tile) return;
+    const hex = tile.querySelector('strong')?.textContent || null;
+    if(hex){
+      navigator.clipboard?.writeText(hex).then(() => {
+        tile.querySelector('.meta p').textContent = `Hex: ${hex} • Copiat!`;
+        setTimeout(() => {
+          tile.querySelector('.meta p').textContent = `Hex: ${hex}`;
+        }, 1200);
+      }).catch(()=>{/* ignore */});
+    }
+  });
+
+})();
+</script>
 </body>
 </html>
