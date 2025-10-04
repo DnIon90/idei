@@ -11,16 +11,11 @@ input,button { padding:6px; margin:5px 0; border-radius:4px; border:1px solid #c
 button { background:#2e7d32; color:white; border:none; cursor:pointer; }
 button:hover { background:#1b5e20; }
 #login-area,#pontaj-area { margin-bottom:20px; }
-table { border-collapse: collapse; margin-top:20px; background:white; width:100%; max-width:700px; }
+table { border-collapse: collapse; margin-top:20px; background:white; }
 th, td { border:1px solid #ccc; padding:6px 12px; text-align:center; }
 th { background:#2e7d32; color:white; }
 #total { margin-top:10px; font-weight:bold; }
 .muted { font-size:13px; color:#666; }
-.edit-btn, .delete-btn { padding:3px 6px; margin:0 2px; border-radius:3px; font-size:12px; }
-.edit-btn { background:#ff9800; color:white; border:none; cursor:pointer; }
-.edit-btn:hover { background:#f57c00; }
-.delete-btn { background:#d32f2f; color:white; border:none; cursor:pointer; }
-.delete-btn:hover { background:#b71c1c; }
 </style>
 </head>
 <body>
@@ -63,7 +58,7 @@ th { background:#2e7d32; color:white; }
   <table>
     <thead>
       <tr>
-        <th>#</th><th>Data</th><th>Ore lucrate</th><th>Locul de muncă</th><th>Plata pe oră (€)</th><th>Total (€)</th><th>Acțiuni</th>
+        <th>#</th><th>Data</th><th>Ore lucrate</th><th>Locul de muncă</th><th>Plata pe oră (€)</th><th>Total (€)</th>
       </tr>
     </thead>
     <tbody id="timesheet-table"></tbody>
@@ -72,7 +67,7 @@ th { background:#2e7d32; color:white; }
 </div>
 
 <script>
-//=== Login / Register simplu cu hash ===
+//=== Login / Register simplu ===
 async function sha256Hex(str){
   const utf8=new TextEncoder().encode(str);
   const hash=await crypto.subtle.digest('SHA-256',utf8);
@@ -161,7 +156,12 @@ function onLogin(){
 }
 
 //=== Pontaj ===
-function loadTimesheet() { return userData.timesheet || []; }
+const STORAGE_TIMESHEET = 'timesheet_data';
+
+function loadTimesheet() {
+  return userData.timesheet || [];
+}
+
 function saveTimesheetData() {
   const users = loadUsers();
   users[currentUser].timesheet = userData.timesheet;
@@ -194,21 +194,12 @@ function renderTimesheet(){
   let totalPayment = 0;
   timesheet.forEach((entry,index)=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${index+1}</td>
-                    <td>${entry.date}</td>
-                    <td>${entry.hours}</td>
-                    <td>${entry.place}</td>
-                    <td>${entry.rate}</td>
-                    <td>${entry.total}</td>
-                    <td>
-                      <button class="edit-btn" onclick="editEntry(${index})">Editează</button>
-                      <button class="delete-btn" onclick="deleteEntry(${index})">Șterge</button>
-                    </td>`;
+    tr.innerHTML=`<td>${index+1}</td><td>${entry.date}</td><td>${entry.hours}</td><td>${entry.place}</td><td>${entry.rate}</td><td>${entry.total}</td>`;
     tbody.appendChild(tr);
     totalPayment+=parseFloat(entry.total);
   });
   document.getElementById('total').textContent=`Total Plata: ${totalPayment.toFixed(2)} €`;
 }
-
-function deleteEntry(idx){
-  if(confirm("Sigur vrei să ștergi această înregistrare?")){
+</script>
+</body>
+</html>
