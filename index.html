@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Calculator Salariu - GitHub Pages</title>
+<title>Calculator Salariu cu Istoric</title>
 <style>
 body { font-family: Arial, sans-serif; background:#f0f0f0; padding:20px; }
 h1 { color:#2e7d32; }
@@ -12,10 +12,13 @@ input { padding:6px; margin-top:5px; width:100%; max-width:200px; border-radius:
 button { padding:6px 12px; background:#2e7d32; color:white; border:none; border-radius:4px; cursor:pointer; margin-top:10px; }
 button:hover { background:#1b5e20; }
 #results { margin-top:20px; background:white; padding:10px; border-radius:4px; width:fit-content; }
+table { border-collapse: collapse; margin-top:20px; background:white; }
+th, td { border:1px solid #ccc; padding:6px 12px; text-align:center; }
+th { background:#2e7d32; color:white; }
 </style>
 </head>
 <body>
-<h1>Calculator Salariu</h1>
+<h1>Calculator Salariu cu Istoric</h1>
 
 <label>Salariu de bază (€):</label>
 <input type="number" id="base-salary" placeholder="Ex: 2000">
@@ -37,23 +40,91 @@ button:hover { background:#1b5e20; }
   <p>Salariu net: <span id="net-salary"></span> €</p>
 </div>
 
+<h2>📊 Istoric calcule</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Salariu bază (€)</th>
+<th>Bonusuri (€)</th>
+<th>Deduceri (€)</th>
+<th>Taxă (%)</th>
+<th>Salariu brut (€)</th>
+<th>Taxe (€)</th>
+<th>Salariu net (€)</th>
+</tr>
+</thead>
+<tbody id="history-table">
+</tbody>
+</table>
+
 <script>
-function calculateSalary() {
-    const base = parseFloat(document.getElementById('base-salary').value) || 0;
-    const bonuses = parseFloat(document.getElementById('bonuses').value) || 0;
-    const deductions = parseFloat(document.getElementById('deductions').value) || 0;
-    const taxRate = parseFloat(document.getElementById('tax-rate').value) || 0;
-
-    const grossSalary = base + bonuses - deductions;
-    const taxes = grossSalary * (taxRate / 100);
-    const netSalary = grossSalary - taxes;
-
-    document.getElementById('gross-salary').textContent = grossSalary.toFixed(2);
-    document.getElementById('taxes').textContent = taxes.toFixed(2);
-    document.getElementById('net-salary').textContent = netSalary.toFixed(2);
-
-    document.getElementById('results').style.display = 'block';
+//=== LocalStorage pentru istoric ===
+const STORAGE_HISTORY = 'salary_history';
+function loadHistory() {
+  return JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
 }
+function saveHistory(history) {
+  localStorage.setItem(STORAGE_HISTORY, JSON.stringify(history));
+}
+
+//=== Calcul salariu ===
+function calculateSalary() {
+  const base = parseFloat(document.getElementById('base-salary').value) || 0;
+  const bonuses = parseFloat(document.getElementById('bonuses').value) || 0;
+  const deductions = parseFloat(document.getElementById('deductions').value) || 0;
+  const taxRate = parseFloat(document.getElementById('tax-rate').value) || 0;
+
+  const grossSalary = base + bonuses - deductions;
+  const taxes = grossSalary * (taxRate / 100);
+  const netSalary = grossSalary - taxes;
+
+  // Afișare rezultate
+  document.getElementById('gross-salary').textContent = grossSalary.toFixed(2);
+  document.getElementById('taxes').textContent = taxes.toFixed(2);
+  document.getElementById('net-salary').textContent = netSalary.toFixed(2);
+  document.getElementById('results').style.display = 'block';
+
+  // Salvare în istoric
+  const history = loadHistory();
+  history.push({
+    base: base.toFixed(2),
+    bonuses: bonuses.toFixed(2),
+    deductions: deductions.toFixed(2),
+    taxRate: taxRate.toFixed(2),
+    gross: grossSalary.toFixed(2),
+    taxes: taxes.toFixed(2),
+    net: netSalary.toFixed(2)
+  });
+  saveHistory(history);
+  renderHistory();
+}
+
+//=== Render istoric ===
+function renderHistory() {
+  const history = loadHistory();
+  const tbody = document.getElementById('history-table');
+  tbody.innerHTML = '';
+  history.forEach((item, index) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${item.base}</td>
+      <td>${item.bonuses}</td>
+      <td>${item.deductions}</td>
+      <td>${item.taxRate}</td>
+      <td>${item.gross}</td>
+      <td>${item.taxes}</td>
+      <td>${item.net}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+//=== La încărcare pagină ===
+window.onload = () => {
+  renderHistory();
+};
 </script>
 </body>
 </html>
