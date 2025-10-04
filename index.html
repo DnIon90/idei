@@ -1,55 +1,172 @@
-
-
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Site creat de Dn_Ion</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      color: white;
-      background: linear-gradient(135deg, #ff416c, #ff4b2b, #1d2b64, #f8cdda);
-      background-size: 400% 400%;
-      animation: gradientBG 12s ease infinite;
-    }
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    h1 {
-      margin-top: 50px;
-      font-size: 3rem;
-    }
-    p {
-      font-size: 1.3rem;
-    }
-    .box {
-      margin: 50px auto;
-      padding: 20px;
-      max-width: 600px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Joc Strategie cu Admin</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f0f2f5;margin:0;padding:20px;}
+h1,h2{color:#007bff;margin:5px 0;}
+input,button{padding:8px;border-radius:5px;border:1px solid #ccc;font-size:14px;}
+button{background:#007bff;color:#fff;border:0;cursor:pointer;}
+button:hover{background:#0056b3;}
+.muted{color:#666;font-size:13px;}
+#login-area,#game-area,#admin-area{margin-bottom:20px;}
+#resources{display:flex;gap:15px;margin:10px 0;}
+.resource{padding:10px;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.1);text-align:center;width:120px;}
+.resource button{margin-top:5px;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+table,th,td{border:1px solid #ccc;}
+th,td{padding:6px;text-align:center;}
+.admin-btn{background:#ff6b6b;}
+</style>
 </head>
 <body>
-  <h1>🌈 Site-ul meu colorattttt!</h1>
-  <div class="box">
-    <p>Bun venit pe prima mea pagină GitHub Pages cu fundal animat și colorat 🎉</p>
-  </div>
-</body>
-</html>
+<h1>🏰 Joc Strategie Online</h1>
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Salut!</title>
-</head>
-<body>
-    <h1>Merge GitHub Pages 🎉</h1>
-    
+<div id="login-area">
+  <div id="not-logged">
+    <input id="login-username" placeholder="Username"><br><br>
+    <input id="login-password" placeholder="Parolă" type="password"><br><br>
+    <button id="login-btn">Loghează</button>
+    <button id="show-register-btn" style="background:#2b8a3e">Înregistrează</button>
+    <div id="register-area" style="display:none;margin-top:10px;">
+      <input id="reg-username" placeholder="Username"><br><br>
+      <input id="reg-password" placeholder="Parolă" type="password"><br><br>
+      <select id="reg-role"><option value="user">User</option><option value="admin">Admin</option></select><br><br>
+      <button id="register-btn">Creează cont</button>
+      <button id="cancel-register" style="background:#888">Anulează</button>
+      <div id="reg-msg" class="muted"></div>
+    </div>
+  </div>
+  <div id="logged" style="display:none;">
+    <p class="muted">Logat ca <strong id="me-username"></strong> (<span id="me-role"></span>)</p>
+    <button id="logout-btn">Deconectează</button>
+  </div>
+</div>
+
+<div id="game-area" style="display:none;">
+  <h2>🏗️ Construiește resurse</h2>
+  <div id="resources">
+    <div class="resource">
+      <div>🍀 Lemn</div>
+      <div id="wood-count">0</div>
+      <button id="collect-wood">Adună</button>
+    </div>
+    <div class="resource">
+      <div>🪨 Piatră</div>
+      <div id="stone-count">0</div>
+      <button id="collect-stone">Adună</button>
+    </div>
+    <div class="resource">
+      <div>⚡ Energie</div>
+      <div id="energy-count">0</div>
+      <button id="collect-energy">Adună</button>
+    </div>
+  </div>
+  <h2>Upgrade turnuri</h2>
+  <div>
+    <button id="upgrade-btn">Upgrade turn (cost: 10 lemn + 5 piatră)</button>
+    <div class="muted" id="tower-level">Nivel turn: 0</div>
+  </div>
+</div>
+
+<div id="admin-area" style="display:none;">
+  <h2>🔧 Panou Administrator</h2>
+  <table>
+    <thead>
+      <tr><th>Username</th><th>Rol</th><th>Lemn</th><th>Piatră</th><th>Energie</th><th>Turn</th><th>Acțiuni</th></tr>
+    </thead>
+    <tbody id="admin-table"></tbody>
+  </table>
+</div>
+
+<script>
+/* ===== Utilitare SHA-256 ===== */
+async function sha256Hex(str){
+  const utf8=new TextEncoder().encode(str);
+  const hash=await crypto.subtle.digest('SHA-256',utf8);
+  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ===== LocalStorage ===== */
+const STORAGE_USERS='strategy_users_v1';
+function loadUsers(){return JSON.parse(localStorage.getItem(STORAGE_USERS)||'{}');}
+function saveUsers(u){localStorage.setItem(STORAGE_USERS,JSON.stringify(u));}
+
+/* ===== Elemente UI ===== */
+const loginUsername=document.getElementById('login-username');
+const loginPassword=document.getElementById('login-password');
+const loginBtn=document.getElementById('login-btn');
+const showRegBtn=document.getElementById('show-register-btn');
+const registerArea=document.getElementById('register-area');
+const regUsername=document.getElementById('reg-username');
+const regPassword=document.getElementById('reg-password');
+const regRole=document.getElementById('reg-role');
+const registerBtn=document.getElementById('register-btn');
+const cancelRegister=document.getElementById('cancel-register');
+const regMsg=document.getElementById('reg-msg');
+const notLoggedDiv=document.getElementById('not-logged');
+const loggedDiv=document.getElementById('logged');
+const meUsernameEl=document.getElementById('me-username');
+const meRoleEl=document.getElementById('me-role');
+const logoutBtn=document.getElementById('logout-btn');
+const gameArea=document.getElementById('game-area');
+const adminArea=document.getElementById('admin-area');
+const woodCount=document.getElementById('wood-count');
+const stoneCount=document.getElementById('stone-count');
+const energyCount=document.getElementById('energy-count');
+const collectWood=document.getElementById('collect-wood');
+const collectStone=document.getElementById('collect-stone');
+const collectEnergy=document.getElementById('collect-energy');
+const upgradeBtn=document.getElementById('upgrade-btn');
+const towerLevelEl=document.getElementById('tower-level');
+const adminTable=document.getElementById('admin-table');
+
+let currentUser=null;
+let currentRole=null;
+let userData={wood:0,stone:0,energy:0,tower:0};
+
+/* ===== Logare / Registrare ===== */
+showRegBtn.addEventListener('click',()=>{registerArea.style.display='block';});
+cancelRegister.addEventListener('click',()=>{registerArea.style.display='none';regMsg.textContent='';});
+
+registerBtn.addEventListener('click',async()=>{
+  const u=regUsername.value.trim(),p=regPassword.value,role=regRole.value;
+  if(!u||!p){regMsg.textContent='Completează toate câmpurile';return;}
+  const users=loadUsers();
+  if(users[u]){regMsg.textContent='Username deja folosit';return;}
+  const hash=await sha256Hex(p);
+  users[u]={passHash:hash,role:role,wood:0,stone:0,energy:0,tower:0};
+  saveUsers(users);
+  regMsg.textContent='Cont creat! Poți să te loghezi.';
+  regUsername.value=''; regPassword.value='';
+  registerArea.style.display='none';
+});
+
+loginBtn.addEventListener('click',async()=>{
+  const u=loginUsername.value.trim(),p=loginPassword.value;
+  if(!u||!p){alert('Completează username și parolă');return;}
+  const users=loadUsers();
+  if(!users[u]){alert('Utilizator inexistent');return;}
+  const hash=await sha256Hex(p);
+  if(hash!==users[u].passHash){alert('Parolă greșită');return;}
+  currentUser=u;
+  currentRole=users[u].role;
+  userData={wood:users[u].wood,stone:users[u].stone,energy:users[u].energy,tower:users[u].tower};
+  onLogin();
+  loginUsername.value=''; loginPassword.value='';
+});
+
+logoutBtn.addEventListener('click',()=>{currentUser=null; currentRole=null; onLogout();});
+
+function onLogin(){
+  notLoggedDiv.style.display='none'; loggedDiv.style.display='block';
+  gameArea.style.display='block';
+  meUsernameEl.textContent=currentUser; meRoleEl.textContent=currentRole;
+  updateResourcesUI();
+  if(currentRole==='admin'){adminArea.style.display='block'; renderAdminTable();}
+}
+
+function onLogout(){
+  notLoggedDiv
