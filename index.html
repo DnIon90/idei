@@ -7,7 +7,7 @@
 <style>
 body{font-family:Arial,sans-serif;background:#f0f2f5;margin:0;padding:20px;}
 h1,h2{color:#007bff;margin:5px 0;}
-input,button{padding:8px;border-radius:5px;border:1px solid #ccc;font-size:14px;}
+input,button,select{padding:8px;border-radius:5px;border:1px solid #ccc;font-size:14px;}
 button{background:#007bff;color:#fff;border:0;cursor:pointer;}
 button:hover{background:#0056b3;}
 .muted{color:#666;font-size:13px;}
@@ -82,7 +82,7 @@ th,td{padding:6px;text-align:center;}
 </div>
 
 <script>
-/* ===== Utilitare SHA-256 ===== */
+/* ===== SHA-256 ===== */
 async function sha256Hex(str){
   const utf8=new TextEncoder().encode(str);
   const hash=await crypto.subtle.digest('SHA-256',utf8);
@@ -160,13 +160,71 @@ loginBtn.addEventListener('click',async()=>{
 
 logoutBtn.addEventListener('click',()=>{currentUser=null; currentRole=null; onLogout();});
 
+/* ===== Login / Logout UI ===== */
 function onLogin(){
-  notLoggedDiv.style.display='none'; loggedDiv.style.display='block';
+  notLoggedDiv.style.display='none';
+  loggedDiv.style.display='block';
   gameArea.style.display='block';
-  meUsernameEl.textContent=currentUser; meRoleEl.textContent=currentRole;
+  meUsernameEl.textContent=currentUser;
+  meRoleEl.textContent=currentRole;
   updateResourcesUI();
   if(currentRole==='admin'){adminArea.style.display='block'; renderAdminTable();}
 }
 
 function onLogout(){
-  notLoggedDiv
+  notLoggedDiv.style.display='block';
+  loggedDiv.style.display='none';
+  gameArea.style.display='none';
+  adminArea.style.display='none';
+  meUsernameEl.textContent='';
+  meRoleEl.textContent='';
+}
+
+/* ===== Joc strategie simplu ===== */
+function updateResourcesUI(){
+  woodCount.textContent=userData.wood;
+  stoneCount.textContent=userData.stone;
+  energyCount.textContent=userData.energy;
+  towerLevelEl.textContent='Nivel turn: '+userData.tower;
+}
+
+function saveUserData(){
+  const users=loadUsers();
+  if(!currentUser) return;
+  users[currentUser].wood=userData.wood;
+  users[currentUser].stone=userData.stone;
+  users[currentUser].energy=userData.energy;
+  users[currentUser].tower=userData.tower;
+  saveUsers(users);
+}
+
+collectWood.addEventListener('click',()=>{userData.wood+=1;updateResourcesUI(); saveUserData();});
+collectStone.addEventListener('click',()=>{userData.stone+=1;updateResourcesUI(); saveUserData();});
+collectEnergy.addEventListener('click',()=>{userData.energy+=1;updateResourcesUI(); saveUserData();});
+upgradeBtn.addEventListener('click',()=>{
+  if(userData.wood>=10 && userData.stone>=5){
+    userData.wood-=10; userData.stone-=5; userData.tower+=1;
+    updateResourcesUI(); saveUserData();
+  } else alert('Resurse insuficiente');
+});
+
+/* ===== Admin ===== */
+function renderAdminTable(){
+  adminTable.innerHTML='';
+  const users=loadUsers();
+  Object.keys(users).forEach(u=>{
+    const us=users[u];
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${u}</td><td>${us.role}</td><td>${us.wood}</td><td>${us.stone}</td><td>${us.energy}</td><td>${us.tower}</td>
+    <td>${u!==currentUser?`<button class="admin-btn" onclick="deleteUser('${u}')">Șterge</button>`:''}</td>`;
+    adminTable.appendChild(tr);
+  });
+}
+
+window.deleteUser=function(u){
+  if(!confirm('Ștergi utilizatorul '+u+'?')) return;
+  const users=loadUsers(); delete users[u]; saveUsers(users); renderAdminTable();
+}
+</script>
+</body>
+</html>
