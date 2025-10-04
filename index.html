@@ -11,11 +11,16 @@ input,button { padding:6px; margin:5px 0; border-radius:4px; border:1px solid #c
 button { background:#2e7d32; color:white; border:none; cursor:pointer; }
 button:hover { background:#1b5e20; }
 #login-area,#pontaj-area { margin-bottom:20px; }
-table { border-collapse: collapse; margin-top:20px; background:white; }
+table { border-collapse: collapse; margin-top:20px; background:white; width:100%; max-width:700px; }
 th, td { border:1px solid #ccc; padding:6px 12px; text-align:center; }
 th { background:#2e7d32; color:white; }
 #total { margin-top:10px; font-weight:bold; }
 .muted { font-size:13px; color:#666; }
+.edit-btn, .delete-btn { padding:3px 6px; margin:0 2px; border-radius:3px; font-size:12px; }
+.edit-btn { background:#ff9800; color:white; border:none; cursor:pointer; }
+.edit-btn:hover { background:#f57c00; }
+.delete-btn { background:#d32f2f; color:white; border:none; cursor:pointer; }
+.delete-btn:hover { background:#b71c1c; }
 </style>
 </head>
 <body>
@@ -59,85 +64,6 @@ th { background:#2e7d32; color:white; }
     <thead>
       <tr>
         <th>#</th><th>Data</th><th>Ore lucrate</th><th>Locul de muncă</th><th>Plata pe oră (€)</th><th>Total (€)</th><th>Acțiuni</th>
-      </tr>
-    </thead>
-    <tbody id="timesheet-table"></tbody>
-  </table>
-  <div id="total">Total Plata: 0 €</div>
-</div>
-
-<script>
-//=== Adăugare funcții edit / delete ===
-function renderTimesheet(){
-  const timesheet = userData.timesheet || [];
-  const tbody = document.getElementById('timesheet-table');
-  tbody.innerHTML='';
-  let totalPayment = 0;
-  timesheet.forEach((entry,index)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${index+1}</td>
-                    <td>${entry.date}</td>
-                    <td>${entry.hours}</td>
-                    <td>${entry.place}</td>
-                    <td>${entry.rate}</td>
-                    <td>${entry.total}</td>
-                    <td>
-                      <button onclick="editEntry(${index})">Editează</button>
-                      <button onclick="deleteEntry(${index})">Șterge</button>
-                    </td>`;
-    tbody.appendChild(tr);
-    totalPayment+=parseFloat(entry.total);
-  });
-  document.getElementById('total').textContent=`Total Plata: ${totalPayment.toFixed(2)} €`;
-}
-
-function deleteEntry(idx){
-  if(confirm("Sigur vrei să ștergi această înregistrare?")){
-    userData.timesheet.splice(idx,1);
-    saveTimesheetData();
-    renderTimesheet();
-  }
-}
-
-function editEntry(idx){
-  const entry = userData.timesheet[idx];
-  const newDate = prompt("Data:", entry.date);
-  if(newDate === null) return;
-  const newHours = parseFloat(prompt("Ore lucrate:", entry.hours));
-  if(isNaN(newHours)) return;
-  const newPlace = prompt("Locul de muncă:", entry.place);
-  if(newPlace === null) return;
-  const newRate = parseFloat(prompt("Plata pe oră (€):", entry.rate));
-  if(isNaN(newRate)) return;
-
-  entry.date = newDate;
-  entry.hours = newHours;
-  entry.place = newPlace;
-  entry.rate = newRate;
-  entry.total = (newHours*newRate).toFixed(2);
-
-  saveTimesheetData();
-  renderTimesheet();
-}
-</script>
-
-<!-- PONTAJ -->
-<div id="pontaj-area" style="display:none;">
-  <label>Data:</label>
-  <input type="date" id="work-date">
-  <label>Ore lucrate:</label>
-  <input type="number" id="hours-worked" placeholder="Ex: 8" min="0">
-  <label>Locul de muncă / Proiect:</label>
-  <input type="text" id="work-place" placeholder="Ex: Birou / Proiect X">
-  <label>Plata pe oră (€):</label>
-  <input type="number" id="hourly-rate" placeholder="Ex: 10" min="0">
-  <button onclick="addEntry()">Adaugă Zi</button>
-
-  <h2>📊 Pontaj</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>#</th><th>Data</th><th>Ore lucrate</th><th>Locul de muncă</th><th>Plata pe oră (€)</th><th>Total (€)</th>
       </tr>
     </thead>
     <tbody id="timesheet-table"></tbody>
@@ -235,12 +161,7 @@ function onLogin(){
 }
 
 //=== Pontaj ===
-const STORAGE_TIMESHEET = 'timesheet_data';
-
-function loadTimesheet() {
-  return userData.timesheet || [];
-}
-
+function loadTimesheet() { return userData.timesheet || []; }
 function saveTimesheetData() {
   const users = loadUsers();
   users[currentUser].timesheet = userData.timesheet;
@@ -273,11 +194,49 @@ function renderTimesheet(){
   let totalPayment = 0;
   timesheet.forEach((entry,index)=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${index+1}</td><td>${entry.date}</td><td>${entry.hours}</td><td>${entry.place}</td><td>${entry.rate}</td><td>${entry.total}</td>`;
+    tr.innerHTML=`<td>${index+1}</td>
+                    <td>${entry.date}</td>
+                    <td>${entry.hours}</td>
+                    <td>${entry.place}</td>
+                    <td>${entry.rate}</td>
+                    <td>${entry.total}</td>
+                    <td>
+                      <button class="edit-btn" onclick="editEntry(${index})">Editează</button>
+                      <button class="delete-btn" onclick="deleteEntry(${index})">Șterge</button>
+                    </td>`;
     tbody.appendChild(tr);
     totalPayment+=parseFloat(entry.total);
   });
   document.getElementById('total').textContent=`Total Plata: ${totalPayment.toFixed(2)} €`;
+}
+
+function deleteEntry(idx){
+  if(confirm("Sigur vrei să ștergi această înregistrare?")){
+    userData.timesheet.splice(idx,1);
+    saveTimesheetData();
+    renderTimesheet();
+  }
+}
+
+function editEntry(idx){
+  const entry = userData.timesheet[idx];
+  const newDate = prompt("Data:", entry.date);
+  if(newDate === null) return;
+  const newHours = parseFloat(prompt("Ore lucrate:", entry.hours));
+  if(isNaN(newHours)) return;
+  const newPlace = prompt("Locul de muncă:", entry.place);
+  if(newPlace === null) return;
+  const newRate = parseFloat(prompt("Plata pe oră (€):", entry.rate));
+  if(isNaN(newRate)) return;
+
+  entry.date = newDate;
+  entry.hours = newHours;
+  entry.place = newPlace;
+  entry.rate = newRate;
+  entry.total = (newHours*newRate).toFixed(2);
+
+  saveTimesheetData();
+  renderTimesheet();
 }
 </script>
 </body>
