@@ -3,63 +3,169 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Foaie Pontaj</title>
+<title>Foaie Pontaj cu Login</title>
 <style>
 body { font-family: Arial, sans-serif; background:#f0f0f0; padding:20px; }
-h1 { color:#2e7d32; }
-input, select { padding:6px; margin:5px 0; border-radius:4px; border:1px solid #ccc; width:100%; max-width:200px; }
-button { padding:6px 12px; background:#2e7d32; color:white; border:none; border-radius:4px; cursor:pointer; margin-top:10px; }
+h1,h2 { color:#2e7d32; }
+input,button { padding:6px; margin:5px 0; border-radius:4px; border:1px solid #ccc; width:100%; max-width:200px; }
+button { background:#2e7d32; color:white; border:none; cursor:pointer; }
 button:hover { background:#1b5e20; }
+#login-area,#pontaj-area { margin-bottom:20px; }
 table { border-collapse: collapse; margin-top:20px; background:white; }
 th, td { border:1px solid #ccc; padding:6px 12px; text-align:center; }
 th { background:#2e7d32; color:white; }
 #total { margin-top:10px; font-weight:bold; }
+.muted { font-size:13px; color:#666; }
 </style>
 </head>
 <body>
-<h1>Foaie de Pontaj</h1>
+<h1>Foaie Pontaj</h1>
 
-<label>Data:</label>
-<input type="date" id="work-date">
+<!-- LOGIN / REGISTER -->
+<div id="login-area">
+  <div id="not-logged">
+    <input id="login-username" placeholder="Username"><br>
+    <input id="login-password" placeholder="Parolă" type="password"><br>
+    <button id="login-btn">Loghează</button>
+    <button id="show-register-btn">Înregistrează</button>
+    <div id="register-area" style="display:none;margin-top:10px;">
+      <input id="reg-username" placeholder="Username"><br>
+      <input id="reg-password" placeholder="Parolă" type="password"><br>
+      <button id="register-btn">Creează cont</button>
+      <button id="cancel-register">Anulează</button>
+      <div id="reg-msg" class="muted"></div>
+    </div>
+  </div>
+  <div id="logged" style="display:none;">
+    <p class="muted">Logat ca <strong id="me-username"></strong></p>
+    <button id="logout-btn">Deconectează</button>
+  </div>
+</div>
 
-<label>Ore lucrate:</label>
-<input type="number" id="hours-worked" placeholder="Ex: 8" min="0">
+<!-- PONTAJ -->
+<div id="pontaj-area" style="display:none;">
+  <label>Data:</label>
+  <input type="date" id="work-date">
+  <label>Ore lucrate:</label>
+  <input type="number" id="hours-worked" placeholder="Ex: 8" min="0">
+  <label>Locul de muncă / Proiect:</label>
+  <input type="text" id="work-place" placeholder="Ex: Birou / Proiect X">
+  <label>Plata pe oră (€):</label>
+  <input type="number" id="hourly-rate" placeholder="Ex: 10" min="0">
+  <button onclick="addEntry()">Adaugă Zi</button>
 
-<label>Locul de muncă / Proiect:</label>
-<input type="text" id="work-place" placeholder="Ex: Birou / Proiect X">
-
-<label>Plata pe oră (€):</label>
-<input type="number" id="hourly-rate" placeholder="Ex: 10" min="0">
-
-<button onclick="addEntry()">Adaugă Zi</button>
-
-<h2>📊 Pontaj</h2>
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Data</th>
-<th>Ore lucrate</th>
-<th>Locul de muncă</th>
-<th>Plata pe oră (€)</th>
-<th>Total (€)</th>
-</tr>
-</thead>
-<tbody id="timesheet-table">
-</tbody>
-</table>
-<div id="total">Total Plata: 0 €</div>
+  <h2>📊 Pontaj</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Data</th><th>Ore lucrate</th><th>Locul de muncă</th><th>Plata pe oră (€)</th><th>Total (€)</th>
+      </tr>
+    </thead>
+    <tbody id="timesheet-table"></tbody>
+  </table>
+  <div id="total">Total Plata: 0 €</div>
+</div>
 
 <script>
-//=== LocalStorage pentru pontaj ===
+//=== Login / Register simplu ===
+async function sha256Hex(str){
+  const utf8=new TextEncoder().encode(str);
+  const hash=await crypto.subtle.digest('SHA-256',utf8);
+  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+const STORAGE_USERS='timesheet_users';
+function loadUsers(){return JSON.parse(localStorage.getItem(STORAGE_USERS)||'{}');}
+function saveUsers(u){localStorage.setItem(STORAGE_USERS,JSON.stringify(u));}
+
+const loginUsername=document.getElementById('login-username');
+const loginPassword=document.getElementById('login-password');
+const loginBtn=document.getElementById('login-btn');
+const showRegBtn=document.getElementById('show-register-btn');
+const registerArea=document.getElementById('register-area');
+const regUsername=document.getElementById('reg-username');
+const regPassword=document.getElementById('reg-password');
+const registerBtn=document.getElementById('register-btn');
+const cancelRegister=document.getElementById('cancel-register');
+const regMsg=document.getElementById('reg-msg');
+const notLoggedDiv=document.getElementById('not-logged');
+const loggedDiv=document.getElementById('logged');
+const meUsernameEl=document.getElementById('me-username');
+const logoutBtn=document.getElementById('logout-btn');
+const pontajArea=document.getElementById('pontaj-area');
+
+let currentUser=null;
+let userData={timesheet:[]};
+
+//=== Register / Login ===
+showRegBtn.addEventListener('click',()=>{registerArea.style.display='block';});
+cancelRegister.addEventListener('click',()=>{registerArea.style.display='none'; regMsg.textContent='';});
+
+registerBtn.addEventListener('click', async () => {
+  const u = regUsername.value.trim();
+  const p = regPassword.value;
+  if(!u||!p){regMsg.textContent='Completează toate câmpurile!'; return;}
+  const users = loadUsers();
+  if(users[u]){regMsg.textContent='Username deja folosit!'; return;}
+  const hash = await sha256Hex(p);
+  users[u] = {passHash: hash, timesheet: []};
+  saveUsers(users);
+  regMsg.textContent='Cont creat! Poți să te loghezi.';
+  regUsername.value=''; regPassword.value=''; registerArea.style.display='none';
+});
+
+loginBtn.addEventListener('click', async () => {
+  const u = loginUsername.value.trim();
+  const p = loginPassword.value;
+  if(!u||!p){alert('Completează username și parolă!'); return;}
+  const users = loadUsers();
+  if(!users[u]){alert('Utilizator inexistent!'); return;}
+  const hash = await sha256Hex(p);
+  if(hash!==users[u].passHash){alert('Parolă greșită!'); return;}
+  currentUser=u;
+  userData = JSON.parse(JSON.stringify(users[u]));
+  localStorage.setItem('currentUser', currentUser);
+  onLogin();
+  loginUsername.value=''; loginPassword.value='';
+});
+
+logoutBtn.addEventListener('click',()=>{
+  currentUser=null;
+  localStorage.removeItem('currentUser');
+  notLoggedDiv.style.display='block';
+  loggedDiv.style.display='none';
+  pontajArea.style.display='none';
+});
+
+window.onload = () => {
+  const savedUser = localStorage.getItem('currentUser');
+  const users = loadUsers();
+  if(savedUser && users[savedUser]){
+    currentUser=savedUser;
+    userData = JSON.parse(JSON.stringify(users[savedUser]));
+    onLogin();
+  }
+}
+
+function onLogin(){
+  notLoggedDiv.style.display='none';
+  loggedDiv.style.display='block';
+  pontajArea.style.display='block';
+  meUsernameEl.textContent=currentUser;
+  renderTimesheet();
+}
+
+//=== Pontaj ===
 const STORAGE_TIMESHEET = 'timesheet_data';
 
 function loadTimesheet() {
-  return JSON.parse(localStorage.getItem(STORAGE_TIMESHEET) || '[]');
+  return userData.timesheet || [];
 }
 
-function saveTimesheet(data) {
-  localStorage.setItem(STORAGE_TIMESHEET, JSON.stringify(data));
+function saveTimesheetData() {
+  const users = loadUsers();
+  users[currentUser].timesheet = userData.timesheet;
+  saveUsers(users);
 }
 
 function addEntry() {
@@ -68,58 +174,32 @@ function addEntry() {
   const place = document.getElementById('work-place').value.trim();
   const rate = parseFloat(document.getElementById('hourly-rate').value) || 0;
 
-  if (!date || !hours || !place || !rate) {
-    alert("Completează toate câmpurile!");
-    return;
-  }
+  if(!date || !hours || !place || !rate){ alert("Completează toate câmpurile!"); return; }
 
-  const entry = {
-    date: date,
-    hours: hours,
-    place: place,
-    rate: rate,
-    total: (hours * rate).toFixed(2)
-  };
-
-  const timesheet = loadTimesheet();
-  timesheet.push(entry);
-  saveTimesheet(timesheet);
+  const entry = { date, hours, place, rate, total: (hours*rate).toFixed(2) };
+  userData.timesheet.push(entry);
+  saveTimesheetData();
   renderTimesheet();
-  
-  // Curățare câmpuri
-  document.getElementById('work-date').value = '';
-  document.getElementById('hours-worked').value = '';
-  document.getElementById('work-place').value = '';
-  document.getElementById('hourly-rate').value = '';
+
+  document.getElementById('work-date').value='';
+  document.getElementById('hours-worked').value='';
+  document.getElementById('work-place').value='';
+  document.getElementById('hourly-rate').value='';
 }
 
-function renderTimesheet() {
+function renderTimesheet(){
   const timesheet = loadTimesheet();
   const tbody = document.getElementById('timesheet-table');
-  tbody.innerHTML = '';
+  tbody.innerHTML='';
   let totalPayment = 0;
-
-  timesheet.forEach((entry, index) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${entry.date}</td>
-      <td>${entry.hours}</td>
-      <td>${entry.place}</td>
-      <td>${entry.rate}</td>
-      <td>${entry.total}</td>
-    `;
+  timesheet.forEach((entry,index)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${index+1}</td><td>${entry.date}</td><td>${entry.hours}</td><td>${entry.place}</td><td>${entry.rate}</td><td>${entry.total}</td>`;
     tbody.appendChild(tr);
-    totalPayment += parseFloat(entry.total);
+    totalPayment+=parseFloat(entry.total);
   });
-
-  document.getElementById('total').textContent = `Total Plata: ${totalPayment.toFixed(2)} €`;
+  document.getElementById('total').textContent=`Total Plata: ${totalPayment.toFixed(2)} €`;
 }
-
-//=== La încărcare pagină ===
-window.onload = () => {
-  renderTimesheet();
-};
 </script>
 </body>
 </html>
