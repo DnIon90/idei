@@ -3,127 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Calculator Salariu cu Istoric</title>
+<title>Foaie Pontaj</title>
 <style>
 body { font-family: Arial, sans-serif; background:#f0f0f0; padding:20px; }
 h1 { color:#2e7d32; }
-label { display:block; margin-top:10px; }
-input { padding:6px; margin-top:5px; width:100%; max-width:200px; border-radius:4px; border:1px solid #ccc; }
+input, select { padding:6px; margin:5px 0; border-radius:4px; border:1px solid #ccc; width:100%; max-width:200px; }
 button { padding:6px 12px; background:#2e7d32; color:white; border:none; border-radius:4px; cursor:pointer; margin-top:10px; }
 button:hover { background:#1b5e20; }
-#results { margin-top:20px; background:white; padding:10px; border-radius:4px; width:fit-content; }
 table { border-collapse: collapse; margin-top:20px; background:white; }
 th, td { border:1px solid #ccc; padding:6px 12px; text-align:center; }
 th { background:#2e7d32; color:white; }
+#total { margin-top:10px; font-weight:bold; }
 </style>
 </head>
 <body>
-<h1>Calculator Salariu cu Istoric</h1>
+<h1>Foaie de Pontaj</h1>
 
-<label>Salariu de bază (€):</label>
-<input type="number" id="base-salary" placeholder="Ex: 2000">
+<label>Data:</label>
+<input type="date" id="work-date">
 
-<label>Bonusuri (€):</label>
-<input type="number" id="bonuses" placeholder="Ex: 300">
+<label>Ore lucrate:</label>
+<input type="number" id="hours-worked" placeholder="Ex: 8" min="0">
 
-<label>Deduceri (€):</label>
-<input type="number" id="deductions" placeholder="Ex: 150">
+<label>Locul de muncă / Proiect:</label>
+<input type="text" id="work-place" placeholder="Ex: Birou / Proiect X">
 
-<label>Taxă (%) :</label>
-<input type="number" id="tax-rate" placeholder="Ex: 10" value="10">
+<label>Plata pe oră (€):</label>
+<input type="number" id="hourly-rate" placeholder="Ex: 10" min="0">
 
-<button onclick="calculateSalary()">Calculează Salariul Net</button>
+<button onclick="addEntry()">Adaugă Zi</button>
 
-<div id="results" style="display:none;">
-  <p>Salariu brut: <span id="gross-salary"></span> €</p>
-  <p>Taxe: <span id="taxes"></span> €</p>
-  <p>Salariu net: <span id="net-salary"></span> €</p>
-</div>
-
-<h2>📊 Istoric calcule</h2>
+<h2>📊 Pontaj</h2>
 <table>
 <thead>
 <tr>
 <th>#</th>
-<th>Salariu bază (€)</th>
-<th>Bonusuri (€)</th>
-<th>Deduceri (€)</th>
-<th>Taxă (%)</th>
-<th>Salariu brut (€)</th>
-<th>Taxe (€)</th>
-<th>Salariu net (€)</th>
+<th>Data</th>
+<th>Ore lucrate</th>
+<th>Locul de muncă</th>
+<th>Plata pe oră (€)</th>
+<th>Total (€)</th>
 </tr>
 </thead>
-<tbody id="history-table">
+<tbody id="timesheet-table">
 </tbody>
 </table>
+<div id="total">Total Plata: 0 €</div>
 
 <script>
-//=== LocalStorage pentru istoric ===
-const STORAGE_HISTORY = 'salary_history';
-function loadHistory() {
-  return JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
-}
-function saveHistory(history) {
-  localStorage.setItem(STORAGE_HISTORY, JSON.stringify(history));
+//=== LocalStorage pentru pontaj ===
+const STORAGE_TIMESHEET = 'timesheet_data';
+
+function loadTimesheet() {
+  return JSON.parse(localStorage.getItem(STORAGE_TIMESHEET) || '[]');
 }
 
-//=== Calcul salariu ===
-function calculateSalary() {
-  const base = parseFloat(document.getElementById('base-salary').value) || 0;
-  const bonuses = parseFloat(document.getElementById('bonuses').value) || 0;
-  const deductions = parseFloat(document.getElementById('deductions').value) || 0;
-  const taxRate = parseFloat(document.getElementById('tax-rate').value) || 0;
-
-  const grossSalary = base + bonuses - deductions;
-  const taxes = grossSalary * (taxRate / 100);
-  const netSalary = grossSalary - taxes;
-
-  // Afișare rezultate
-  document.getElementById('gross-salary').textContent = grossSalary.toFixed(2);
-  document.getElementById('taxes').textContent = taxes.toFixed(2);
-  document.getElementById('net-salary').textContent = netSalary.toFixed(2);
-  document.getElementById('results').style.display = 'block';
-
-  // Salvare în istoric
-  const history = loadHistory();
-  history.push({
-    base: base.toFixed(2),
-    bonuses: bonuses.toFixed(2),
-    deductions: deductions.toFixed(2),
-    taxRate: taxRate.toFixed(2),
-    gross: grossSalary.toFixed(2),
-    taxes: taxes.toFixed(2),
-    net: netSalary.toFixed(2)
-  });
-  saveHistory(history);
-  renderHistory();
+function saveTimesheet(data) {
+  localStorage.setItem(STORAGE_TIMESHEET, JSON.stringify(data));
 }
 
-//=== Render istoric ===
-function renderHistory() {
-  const history = loadHistory();
-  const tbody = document.getElementById('history-table');
+function addEntry() {
+  const date = document.getElementById('work-date').value;
+  const hours = parseFloat(document.getElementById('hours-worked').value) || 0;
+  const place = document.getElementById('work-place').value.trim();
+  const rate = parseFloat(document.getElementById('hourly-rate').value) || 0;
+
+  if (!date || !hours || !place || !rate) {
+    alert("Completează toate câmpurile!");
+    return;
+  }
+
+  const entry = {
+    date: date,
+    hours: hours,
+    place: place,
+    rate: rate,
+    total: (hours * rate).toFixed(2)
+  };
+
+  const timesheet = loadTimesheet();
+  timesheet.push(entry);
+  saveTimesheet(timesheet);
+  renderTimesheet();
+  
+  // Curățare câmpuri
+  document.getElementById('work-date').value = '';
+  document.getElementById('hours-worked').value = '';
+  document.getElementById('work-place').value = '';
+  document.getElementById('hourly-rate').value = '';
+}
+
+function renderTimesheet() {
+  const timesheet = loadTimesheet();
+  const tbody = document.getElementById('timesheet-table');
   tbody.innerHTML = '';
-  history.forEach((item, index) => {
+  let totalPayment = 0;
+
+  timesheet.forEach((entry, index) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${index + 1}</td>
-      <td>${item.base}</td>
-      <td>${item.bonuses}</td>
-      <td>${item.deductions}</td>
-      <td>${item.taxRate}</td>
-      <td>${item.gross}</td>
-      <td>${item.taxes}</td>
-      <td>${item.net}</td>
+      <td>${entry.date}</td>
+      <td>${entry.hours}</td>
+      <td>${entry.place}</td>
+      <td>${entry.rate}</td>
+      <td>${entry.total}</td>
     `;
     tbody.appendChild(tr);
+    totalPayment += parseFloat(entry.total);
   });
+
+  document.getElementById('total').textContent = `Total Plata: ${totalPayment.toFixed(2)} €`;
 }
 
 //=== La încărcare pagină ===
 window.onload = () => {
-  renderHistory();
+  renderTimesheet();
 };
 </script>
 </body>
